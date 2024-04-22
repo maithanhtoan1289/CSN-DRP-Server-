@@ -11,6 +11,7 @@ import historyRoutes from "./routes/history.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
 import { connectToDB } from "./config/connectToDB.js";
 import { v2 as cloudinary } from "cloudinary";
+import incident from "./routes/incident.routes.js";
 
 const app = express();
 app.use(bodyParser.json());
@@ -38,7 +39,7 @@ app.use("/api/natural-disasters", naturalDisasterRoutes);
 app.use("/api/problems", problemRoutes);
 app.use("/api/histories", historyRoutes);
 app.use("/api/upload", uploadRoutes);
-
+app.use("/api/incident",incident);
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   connectToDB();
