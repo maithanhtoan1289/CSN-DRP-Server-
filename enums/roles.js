@@ -1,0 +1,8 @@
+const ROLES = {
+  ADMIN: "ROLE_ADMIN",
+  EMPLOYEE: "ROLE_EMPLOYEE",
+  RESCUER: "ROLE_RESCUER",
+  USER: "ROLE_USER",
+};
+
+export default ROLES;
