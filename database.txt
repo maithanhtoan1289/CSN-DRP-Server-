@@ -1,0 +1,98 @@
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    username VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    password VARCHAR(100) NOT NULL,
+    phone VARCHAR(10) NULL,
+    address VARCHAR(255) NULL,
+    coordinates VARCHAR(100) NULL,
+    avatar VARCHAR(255) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_username_email UNIQUE (username, email)
+);
+
+CREATE TABLE roles (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL
+);
+
+CREATE TABLE history_natural_disasters (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+casualty_rate VARCHAR(100) NULL,
+status VARCHAR(20) NOT NULL CHECK (status IN ('hoàn thành', 'chưa hoàn thành')),
+rescue_id INTEGER NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE natural_disasters (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    type VARCHAR(100) NULL,
+    start_date VARCHAR(100) NULL,
+    end_date VARCHAR(100) NULL,
+effected_area VARCHAR(255) NULL,
+address VARCHAR(255) NULL,
+url_image VARCHAR(255) NULL,
+status VARCHAR(20) NOT NULL CHECK (status IN ('kết thúc', 'chưa kết thúc')),
+    user_id INT,
+    history_id INT,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (history_id) REFERENCES history_natural_disasters(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE history_problems (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+address VARCHAR(255) NOT NULL,
+status VARCHAR(20) NOT NULL CHECK (status IN ('đã khắc phục', 'chưa khắc phục')),
+rescue_id INTEGER NULL,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE problems (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    type VARCHAR(100) NOT NULL,
+    start_date VARCHAR(100) NOT NULL,
+    end_date VARCHAR(100) NULL,
+address VARCHAR(255) NOT NULL,
+url_image VARCHAR(255) NULL,
+status VARCHAR(20) NOT NULL CHECK (status IN ('kết thúc', 'chưa kết thúc')),
+user_id INT,
+history_id INT,
+FOREIGN KEY (user_id) REFERENCES users(id),
+FOREIGN KEY (history_id) REFERENCES history_problems(id),
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE user_role (
+    id SERIAL PRIMARY KEY,
+    user_id INT,
+    role_id INT,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (role_id) REFERENCES roles(id),
+    UNIQUE (user_id, role_id)
+);
+CREATE TABLE incidents (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  type VARCHAR(100) NOT NULL,
+  description TEXT NULL,
+  location VARCHAR(255) NOT NULL,
+  status VARCHAR(20) NOT NULL CHECK (status IN ('đã giải quyết', 'chưa giải quyết')),
+  user_id INT,
+  hashtags TEXT[] DEFAULT '{}',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+
