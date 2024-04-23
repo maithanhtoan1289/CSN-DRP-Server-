@@ -28,7 +28,7 @@ const authMiddleware = (requiredRoles) => {
           message: "Unauthorized access",
         });
       }
-
+      req.userId = decoded.id;
       // Nếu tất cả các điều kiện đều đúng, cho phép tiếp tục thực hiện các middleware và xử lý request
       next();
     } catch (error) {

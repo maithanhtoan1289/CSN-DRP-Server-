@@ -88,7 +88,58 @@ const incidentService = {
       console.error("Error in findIncidents service:", error.stack);
       throw error;
     }
-  }
+  },
+  async moveIncidentToHistory(incidentId) {
+    try {
+      // Lấy thông tin sự cố cần di chuyển sang lịch sử
+      const getIncidentQuery = {
+        text: 'SELECT * FROM incidents WHERE id = $1',
+        values: [incidentId],
+      };
+
+      const { rows } = await pool.query(getIncidentQuery);
+      const incident = rows[0];
+
+      if (!incident) {
+        throw new Error('Incident not found');
+      }
+
+      // Chuyển sự cố sang bảng history_incidents
+      const moveQuery = {
+        text: `
+          INSERT INTO history_incidents(name, type, description, location, status, user_id, hashtags, created_at, updated_at)
+          VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        `,
+        values: [
+          incident.name,
+          incident.type,
+          incident.description,
+          incident.location,
+          'đã giải quyết',
+          incident.user_id,
+          incident.hashtags,
+          incident.created_at,
+          incident.updated_at,
+        ],
+      };
+
+      await pool.query(moveQuery);
+
+      // Xóa sự cố khỏi bảng incidents
+      const deleteQuery = {
+        text: 'DELETE FROM incidents WHERE id = $1',
+        values: [incidentId],
+      };
+
+      await pool.query(deleteQuery);
+
+      return 'Incident moved to history successfully';
+    } catch (error) {
+      console.error('Error when moving incident to history:', error.stack);
+      throw error;
+    }
+  },
+  
   
 };
 export default incidentService;

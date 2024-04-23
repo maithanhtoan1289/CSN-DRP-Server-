@@ -96,3 +96,25 @@ export const updateIncident = async (req, res) => {
       });
     }
   };
+  export const markIncidentCompleted = async (req, res) => {
+    const { id } = req.body;
+  
+    try {
+      // Kiểm tra id có phải là một số nguyên hay không
+      if (isNaN(id) || !Number.isInteger(Number(id))) {
+        throw new Error('Invalid incident ID');
+      }
+  
+      const result = await incidentService.moveIncidentToHistory(Number(id));
+      res.status(200).json({
+        status: 200,
+        message: result,
+      });
+    } catch (error) {
+      console.error('Error in markIncidentCompleted controller:', error);
+      res.status(500).json({
+        status: 500,
+        message: 'Internal server error: ' + error.message,
+      });
+    }
+  };
