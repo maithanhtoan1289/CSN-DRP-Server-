@@ -10,7 +10,10 @@ const incidentService = {
   location,
   status,
   hashtags) {
-
+    try {
+    if (!hashtags || hashtags.length === 0) {
+      hashtags = [location.replace(/\s+/g, '-')]; // Tạo hashtag từ location, ví dụ: "Hanoi" -> "Hanoi"
+    }
     const query = {
       text: `INSERT INTO incidents (name, type, description, location, status, user_id, hashtags)
              VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -18,7 +21,7 @@ const incidentService = {
              values: [name, type, description, location, status, userId, hashtags],
             };
     
-    try {
+    
       const result = await pool.query(query);
       return result.rows[0];
     } catch (error) {
