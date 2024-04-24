@@ -96,25 +96,33 @@ export const updateIncident = async (req, res) => {
       });
     }
   };
-  export const markIncidentCompleted = async (req, res) => {
-    const { id } = req.body;
+  // export const markIncidentAsResolved = async (req, res) => {
+  //   const { incidentId } = req.body;
   
-    try {
-      // Kiểm tra id có phải là một số nguyên hay không
-      if (isNaN(id) || !Number.isInteger(Number(id))) {
-        throw new Error('Invalid incident ID');
-      }
+  //   if (!incidentId) {
+  //     return res.status(400).json({
+  //       status: 400,
+  //       message: 'Incident ID is required',
+  //     });
+  //   }
   
-      const result = await incidentService.moveIncidentToHistory(Number(id));
-      res.status(200).json({
-        status: 200,
-        message: result,
-      });
-    } catch (error) {
-      console.error('Error in markIncidentCompleted controller:', error);
-      res.status(500).json({
-        status: 500,
-        message: 'Internal server error: ' + error.message,
-      });
-    }
-  };
+  //   try {
+  //     // Đánh dấu sự cố đã giải quyết trong bảng incidents
+  //     await incidentService.updateIncident(incidentId, { status: 1 });
+  
+  //     // Chuyển sự cố đã giải quyết sang bảng history_incidents
+  //     const result = await incidentService.markIncidentAsResolved(incidentId);
+  
+  //     return res.status(200).json({
+  //       status: 200,
+  //       message: result,
+  //     });
+  //   } catch (error) {
+  //     console.error('Error in markIncidentAsResolved controller:', error);
+  //     return res.status(500).json({
+  //       status: 500,
+  //       message: 'Internal server error',
+  //     });
+  //   }
+  // };
+  
