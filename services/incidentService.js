@@ -1,7 +1,7 @@
 
 
 import { pool } from "../config/connectToDB.js";
-
+import stringSimilarity from 'string-similarity';
 const incidentService = {
   async addIncident(userId,
   name,
@@ -62,33 +62,70 @@ const incidentService = {
       throw error;
     }
   },
-
-  async findIncidents(startLocation, endLocation) {
+//tim kiem bang hashtag
+  async findHashtagIncidents(startLocation, endLocation) {
     try {
-      const query = {
-        text: `
-        SELECT * 
-        FROM incidents 
-        WHERE location ILIKE $1 
-        OR location ILIKE $2 
-        OR $3 = ANY(hashtags) 
-        OR $4 = ANY(hashtags)
-      `,
-        values: [
-          `%${startLocation}%`,
-          `%${endLocation}%`,
-          startLocation,
-          endLocation,
-        ],
+      // Tìm các nhãn gần đúng cho startLocation và endLocation
+      const queryStart = {
+          text: `
+          SELECT DISTINCT unnest(hashtags) AS hashtag 
+          FROM incidents 
+          WHERE location ILIKE $1
+          `,
+          values: [`%${startLocation}%`],
       };
-  
+
+      const queryEnd = {
+          text: `
+          SELECT DISTINCT unnest(hashtags) AS hashtag 
+          FROM incidents 
+          WHERE location ILIKE $1
+          `,
+          values: [`%${endLocation}%`],
+      };
+
+      const { rows: startHashtags } = await pool.query(queryStart);
+      const { rows: endHashtags } = await pool.query(queryEnd);
+
+      // Lấy ra danh sách nhãn từ kết quả truy vấn
+      const startTags = startHashtags.map(row => row.hashtag);
+      const endTags = endHashtags.map(row => row.hashtag);
+
+      const query = {
+          text: `
+          SELECT * 
+          FROM incidents 
+          WHERE 
+          (
+              (location ILIKE $1 AND $3 && hashtags)
+              OR
+              (location ILIKE $2 AND $4 && hashtags)
+          )
+          OR
+          (
+              $5 = ANY(hashtags)
+              OR
+              $6 = ANY(hashtags)
+          )
+          `,
+          values: [
+              `%${startLocation}%`,
+              `%${endLocation}%`,
+              startTags,
+              endTags,
+              startLocation,
+              endLocation
+          ],
+      };
+
       const { rows } = await pool.query(query);
       return rows;
-    } catch (error) {
+  } catch (error) {
       console.error("Error in findIncidents service:", error.stack);
       throw error;
-    }
-  },
+  }
+},
+
   async moveIncidentToHistory(incidentId) {
     try {
       // Lấy thông tin sự cố cần di chuyển sang lịch sử

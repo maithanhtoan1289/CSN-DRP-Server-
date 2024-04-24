@@ -76,12 +76,12 @@ export const updateIncident = async (req, res) => {
       });
     }
   };
-  
-  export const findIncidents = async (req, res) => {
+  //tim kiem bang hashtag
+  export const findHashtagIncidents = async (req, res) => {
     const { startLocation, endLocation } = req.body;
   
     try {
-      const incidents = await incidentService.findIncidents(startLocation, endLocation);
+      const incidents = await incidentService.findHashtagIncidents(startLocation, endLocation);
   
       res.status(200).json({
         status: 200,
