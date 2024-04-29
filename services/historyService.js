@@ -63,6 +63,59 @@ const historyService = {
       throw error;
     }
   },
+
+async getIncidentsByUserId(userId) {
+  try {
+    const query = {
+      text: `SELECT * FROM incidents WHERE user_id = $1`,
+      values: [userId],
+    };
+    const { rows } = await pool.query(query);
+    return rows;
+  } catch (error) {
+    console.error("Error in getIncidentsByUserId service:", error.stack);
+    throw error;
+  }
+},
+
+async getHistoryIncidentsByUserId(userId) {
+  try {
+    const query = {
+      text: `SELECT * FROM history_incidents WHERE user_id = $1`,
+      values: [userId],
+    };
+    const { rows } = await pool.query(query);
+    return rows;
+  } catch (error) {
+    console.error("Error in getHistoryIncidentsByUserId service:", error.stack);
+    throw error;
+  }
+},
+
+async getAllIncidentsByUserId(userId) {
+  try {
+    const query = {
+      text: `
+        (SELECT 'incident' AS table_name, id, name, type, description, location, status, user_id, created_at, updated_at
+        FROM incidents
+        WHERE user_id = $1)
+        UNION
+        (SELECT 'history_incident' AS table_name, id, name, type, description, location, status, user_id, created_at, updated_at
+        FROM history_incidents
+        WHERE user_id = $1)
+        ORDER BY created_at DESC;
+      `,
+      values: [userId],
+    };
+
+    const { rows } = await pool.query(query);
+    return rows;
+  } catch (error) {
+    console.error("Error in getAllIncidentsByUserId service:", error.stack);
+    throw error;
+  }
+},
+
 };
 
 export default historyService;
