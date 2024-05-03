@@ -95,3 +95,21 @@ export const getAllRescueHistory = async (req, res) => {
     });
   }
 };
+export const getUserProfileController = async (req, res) => {
+  const userId = req.userId;
+
+  try {
+    const userProfile = await userService.getUserProfile(userId);
+    res.status(200).json({
+      status: 200,
+      message: "Successfully retrieved user profile",
+      data: userProfile,
+    });
+  } catch (error) {
+    console.error("Error in getUserProfileController:", error);
+    res.status(500).json({
+      status: 500,
+      message: "Internal server error: " + error.message,
+    });
+  }
+};

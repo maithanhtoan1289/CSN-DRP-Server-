@@ -185,54 +185,33 @@ const incidentService = {
   }
 },
 
-//       async markIncidentAsResolved(incidentId) {
-//         try {
-//           // Lấy thông tin sự cố
-//           const getIncidentQuery = {
-//             text: 'SELECT * FROM incidents WHERE id = $1',
-//             values: [incidentId],
-//           };
-      
-//           const { rows } = await pool.query(getIncidentQuery);
-//           const incident = rows[0];
-      
-//           if (!incident) {
-//             throw new Error('Incident not found');
-//           }
-      
-//           // Chuyển sự cố sang bảng history_incidents
-//           const moveQuery = {
-//             text: `
-//               INSERT INTO history_incidents(name, type, description, location, status, user_id, hashtags, created_at, updated_at)
-//               VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
-//             `,
-//             values: [
-//               incident.name || null,
-//               incident.type || null,
-//               incident.description || null,
-//               incident.location || null,
-//               incident.status,  // Giữ nguyên giá trị status từ bảng incidents
-//               incident.user_id,
-//               incident.hashtags,
-//               incident.created_at,
-//               incident.updated_at,
-//             ],
-//           };
-      
-//           await pool.query(moveQuery);
-      
-//           // Xóa sự cố khỏi bảng incidents
-//           const deleteQuery = {
-//             text: 'DELETE FROM incidents WHERE id = $1',
-//             values: [incidentId],
-//           };
-      
-//           await pool.query(deleteQuery);
-      
-//           return 'Incident moved to history successfully';
-//         } catch (error) {
-//           console.error('Error when moving incident to history:', error.stack);
-//           throw error;
-//         }}
+
+async deleteIncidentById(incidentId){
+  try {
+    // Xóa sự cố từ database
+    const query = {
+      text: "DELETE FROM incidents WHERE id = $1",
+      values: [incidentId],
+    };
+    await pool.query(query);
+  } catch (error) {
+    console.error("Error when deleting incident", error);
+    throw error;
+  }
+},
+async deleteHistoryIncidentById(historyIncidentId)  {
+  try {
+    const query = {
+      text: "DELETE FROM history_incidents WHERE id = $1",
+      values: [historyIncidentId],
+    };
+
+    await pool.query(query);
+  } catch (error) {
+    console.error("Error when deleting history incident:", error.stack);
+    throw error;
+  }
+  },
+  
 };
 export default incidentService;

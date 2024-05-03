@@ -322,6 +322,22 @@ const userService = {
       throw error;
     }
   },
+
+  async getUserProfile(userId) {
+    try {
+      const query = {
+        text: "SELECT name, phone, address, email FROM users WHERE id = $1",
+        values: [userId],
+      };
+  
+      const { rows } = await pool.query(query);
+      return rows[0];
+    } catch (error) {
+      console.error("Error when getting user profile:", error.stack);
+      throw error;
+    }
+  },
 };
+
 
 export default userService;

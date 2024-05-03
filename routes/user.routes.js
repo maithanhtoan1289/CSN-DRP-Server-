@@ -4,6 +4,7 @@ import {
   getAllUsersByPageAndLimit,
   getAllRescueNeeded,
   getAllRescueHistory,
+  getUserProfileController
 } from "../controllers/user.controllers.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import ROLES from "../enums/roles.js";
@@ -29,5 +30,5 @@ router.get(
   authMiddleware([ROLES.RESCUER]),
   getAllRescueHistory
 );
-
+router.get("/profile", authMiddleware([ROLES.USER,ROLES.RESCUER]), getUserProfileController);
 export default router;
