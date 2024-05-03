@@ -96,33 +96,58 @@ export const updateIncident = async (req, res) => {
       });
     }
   };
-  // export const markIncidentAsResolved = async (req, res) => {
-  //   const { incidentId } = req.body;
+  export const deleteIncidentByIdController = async (req, res) => {
+    try {
+
+      const { incidentId } = req.params;
   
-  //   if (!incidentId) {
-  //     return res.status(400).json({
-  //       status: 400,
-  //       message: 'Incident ID is required',
-  //     });
-  //   }
+      // Gọi service để xóa sự cố
+      await incidentService.deleteIncidentById(incidentId);
   
-  //   try {
-  //     // Đánh dấu sự cố đã giải quyết trong bảng incidents
-  //     await incidentService.updateIncident(incidentId, { status: 1 });
+      res.status(200).json({
+        status: 200,
+        message: "Successfully deleted the incident",
+      });
+    } catch (error) {
+      console.error("Error in deleteIncidentByIdController:", error);
+      res.status(500).json({
+        status: 500,
+        message: "Internal server error: " + error.message,
+      });
+    }
+  };
+  export const deleteHistoryIncidentByIdController = async (req, res) => {
+    const { historyIncidentId } = req.params;
   
-  //     // Chuyển sự cố đã giải quyết sang bảng history_incidents
-  //     const result = await incidentService.markIncidentAsResolved(incidentId);
+    try {
+      await incidentService.deleteHistoryIncidentById(historyIncidentId);
+      res.status(200).json({
+        status: 200,
+        message: "Successfully deleted history incident",
+      });
+    } catch (error) {
+      console.error("Error in deleteHistoryIncidentByIdController:", error);
+      res.status(500).json({
+        status: 500,
+        message: "Internal server error: " + error.message,
+      });
+    }
+  };
+  export const getUserProfileController = async (req, res) => {
+    const userId = req.userId;
   
-  //     return res.status(200).json({
-  //       status: 200,
-  //       message: result,
-  //     });
-  //   } catch (error) {
-  //     console.error('Error in markIncidentAsResolved controller:', error);
-  //     return res.status(500).json({
-  //       status: 500,
-  //       message: 'Internal server error',
-  //     });
-  //   }
-  // };
-  
+    try {
+      const userProfile = await getUserProfile(userId);
+      res.status(200).json({
+        status: 200,
+        message: "Successfully retrieved user profile",
+        data: userProfile,
+      });
+    } catch (error) {
+      console.error("Error in getUserProfileController:", error);
+      res.status(500).json({
+        status: 500,
+        message: "Internal server error: " + error.message,
+      });
+    }
+  };

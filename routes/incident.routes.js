@@ -8,13 +8,15 @@ import {
     getAllIncidents,
     updateIncident,
     findHashtagIncidents,
-    // markIncidentAsResolved
+    deleteIncidentByIdController,
+    deleteHistoryIncidentByIdController
+
 } from "../controllers/incidents.controllers.js";
 
 router.post('/shareIncident',authMiddleware([ROLES.USER]), shareIncident);
 router.get("/getIncident",authMiddleware([ROLES.USER,ROLES.ADMIN]), getAllIncidents);
 router.put("/:id",authMiddleware([ROLES.USER,ROLES.ADMIN]),updateIncident);
 router.post("/find",authMiddleware([ROLES.USER,ROLES.ADMIN]), findHashtagIncidents);
-// router.put("/mark-completed", authMiddleware([ROLES.USER,ROLES.ADMIN]), markIncidentAsResolved);
-
+router.delete("/delete/:incidentId", authMiddleware([ROLES.USER,ROLES.ADMIN]), deleteIncidentByIdController);
+router.delete("/deletehistory/:historyIncidentId", authMiddleware([ROLES.USER,ROLES.ADMIN]), deleteHistoryIncidentByIdController);
 export default router;
