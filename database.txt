@@ -109,3 +109,10 @@ CREATE TABLE history_incidents (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
+CREATE TABLE expertise (
+    id SERIAL PRIMARY KEY,
+    user_id INT,
+    specialty VARCHAR(255) NOT NULL,
+    description TEXT,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
