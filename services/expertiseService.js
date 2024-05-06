@@ -93,35 +93,58 @@ export const deleteExpertise = async (expertiseId) => {
 
 // export const findMatches = async (user_id) => {
 //   const client = await pool.connect();
+// try {
+//   // Lấy thông tin địa chỉ và số điện thoại của người dùng từ bảng users
+//   const userResult = await client.query('SELECT address, phone FROM users WHERE id = $1', [user_id]);
+//   if (userResult.rows.length === 0) {
+//     throw new Error('User not found');
+//   }
+//   const { address, phone } = userResult.rows[0];
 
-//   try {
-//     // Lấy tất cả các sở trương của người dùng 
-//     const expertiseResult = await client.query('SELECT specialty FROM expertise WHERE user_id = $1', [user_id]);
-//     if (expertiseResult.rows.length === 0) {
-//       throw new Error('User expertise not found');
+//   // Lấy tất cả các sở trường của người dùng từ bảng expertise
+//   const expertiseResult = await client.query('SELECT specialty FROM expertise WHERE user_id = $1', [user_id]);
+//   if (expertiseResult.rows.length === 0) {
+//     throw new Error('User expertise not found');
+//   }
+
+//   // Khởi tạo đối tượng matches
+//   const matches = {
+//     problems: [],
+//     natural_disasters: [],
+//     incidents: []
+//   };
+
+//   // Duyệt qua từng sở trường của người dùng
+//   for (let i = 0; i < expertiseResult.rows.length; i++) {
+//     const expertise = expertiseResult.rows[i].specialty;
+
+//     // Tìm các sự kiện tương tự trong mỗi bảng và thêm vào matches
+//     const problemResult = await client.query('SELECT p.id AS problem_id, p.name AS problem_name, p.type AS problem_type, u.name AS user_name, u.address AS user_address, u.phone AS user_phone FROM problems p JOIN users u ON p.user_id = u.id');
+//     for (const problem of problemResult.rows) {
+//       const similarity = calculateSimilarity(problem.problem_name, expertise);
+//       if (similarity > 0.5) {
+//         matches.problems.push({ ...problem, similarity, user_address: address, user_phone: phone });
+//       }
 //     }
-//    // console.log(expertiseResult)
-//     // Duyệt qua từng sở trường
-//     const matches = {
-//       problems: [],
-//       natural_disasters: [],
-//       incidents: []
-//     };
 
-//     for (let i = 0; i < expertiseResult.rows.length; i++) {
-//       const expertise = expertiseResult.rows[i].specialty;
-//       const problemResult = await client.query('SELECT name, type FROM problems');
-//       matches.problems.push(...problemResult.rows.filter(problem => findSimilarityScore(problem.name.toLowerCase(), expertise.toLowerCase()) > 0.5));
-
-//       const disasterResult = await client.query('SELECT name, type FROM natural_disasters');
-//       matches.natural_disasters.push(...disasterResult.rows.filter(disaster => findSimilarityScore(disaster.name.toLowerCase(), expertise.toLowerCase()) > 0.5));
-
-//       const incidentResult = await client.query('SELECT name, type FROM incidents');
-//       matches.incidents.push(...incidentResult.rows.filter(incident => findSimilarityScore(incident.name.toLowerCase(), expertise.toLowerCase()) > 0.5));
-  
+//     const disasterResult = await client.query('SELECT d.id AS disaster_id, d.name AS disaster_name, d.type AS disaster_type, u.name AS user_name, u.address AS user_address, u.phone AS user_phone FROM natural_disasters d JOIN users u ON d.user_id = u.id');
+//     for (const disaster of disasterResult.rows) {
+//       const similarity = calculateSimilarity(disaster.disaster_name, expertise);
+//       if (similarity > 0.5) {
+//         matches.natural_disasters.push({ ...disaster, similarity, user_address: address, user_phone: phone });
+//       }
 //     }
 
-//     return matches;
+//     const incidentResult = await client.query('SELECT i.id AS incident_id, i.name AS incident_name, i.type AS incident_type, u.name AS user_name, u.address AS user_address, u.phone AS user_phone FROM incidents i JOIN users u ON i.user_id = u.id');
+//     for (const incident of incidentResult.rows) {
+//       const similarity = calculateSimilarity(incident.incident_name, expertise);
+//       if (similarity > 0.5) {
+//         matches.incidents.push({ ...incident, similarity, user_address: address, user_phone: phone });
+//       }
+//     }
+//   }
+
+//   return matches;
 //   } finally {
 //     client.release();
 //   }
@@ -138,12 +161,23 @@ export const findMatches = async (user_id) => {
   const client = await pool.connect();
 
   try {
-    // Lấy tất cả các sở trường của người dùng 
+    // Lấy thông tin địa chỉ và số điện thoại của người dùng từ bảng users
+    const userResult = await client.query('SELECT address, phone FROM users WHERE id = $1', [user_id]);
+    if (userResult.rows.length === 0) {
+      throw new Error('User not found');
+    }
+    const { address, phone } = userResult.rows[0];
+
+    // Lấy tất cả các sở trường của người dùng từ bảng expertise
     const expertiseResult = await client.query('SELECT specialty FROM expertise WHERE user_id = $1', [user_id]);
     if (expertiseResult.rows.length === 0) {
       throw new Error('User expertise not found');
     }
 
+    // Khởi tạo một Set để lưu trữ id của các sự kiện đã thêm vào kết quả
+    const addedEvents = new Set();
+
+    // Khởi tạo đối tượng matches
     const matches = {
       problems: [],
       natural_disasters: [],
@@ -154,28 +188,28 @@ export const findMatches = async (user_id) => {
     for (let i = 0; i < expertiseResult.rows.length; i++) {
       const expertise = expertiseResult.rows[i].specialty;
 
-
-      const problemResult = await client.query('SELECT id, name, type FROM problems');
+      // Tìm các sự kiện tương tự trong mỗi bảng và thêm vào matches nếu chưa được thêm trước đó
+      const problemResult = await client.query('SELECT id, name FROM problems');
       for (const problem of problemResult.rows) {
-        const similarity = calculateSimilarity(problem.name, expertise);
-        if (similarity > 0.2) {
-          matches.problems.push({ ...problem });
+        if (!addedEvents.has(problem.id)) {
+          matches.problems.push({ ...problem, user_address: address, user_phone: phone });
+          addedEvents.add(problem.id);
         }
       }
 
-      const disasterResult = await client.query('SELECT id, name, type FROM natural_disasters');
+      const disasterResult = await client.query('SELECT id, name FROM natural_disasters');
       for (const disaster of disasterResult.rows) {
-        const similarity = calculateSimilarity(disaster.name, expertise);
-        if (similarity > 0.2) {
-          matches.natural_disasters.push({ ...disaster });
+        if (!addedEvents.has(disaster.id)) {
+          matches.natural_disasters.push({ ...disaster, user_address: address, user_phone: phone });
+          addedEvents.add(disaster.id);
         }
       }
 
-      const incidentResult = await client.query('SELECT id, name, type FROM incidents');
+      const incidentResult = await client.query('SELECT id, name FROM incidents');
       for (const incident of incidentResult.rows) {
-        const similarity = calculateSimilarity(incident.name, expertise);
-        if (similarity > 0.2) {
-          matches.incidents.push({ ...incident });
+        if (!addedEvents.has(incident.id)) {
+          matches.incidents.push({ ...incident, user_address: address, user_phone: phone });
+          addedEvents.add(incident.id);
         }
       }
     }
