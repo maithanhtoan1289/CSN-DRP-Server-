@@ -79,3 +79,14 @@ export const deleteExpertiseController = async (req, res) => {
         });
     }
 };
+export const getRelatedIncidents = async (req, res) => {
+    const user_id  = req.userId;
+    //console.log(user_id);
+    try {
+      const matches = await expertiseService.findMatches(user_id);
+      res.json(matches);
+    } catch (err) {
+      console.error('Error getting expertise matches:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+};
