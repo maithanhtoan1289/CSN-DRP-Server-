@@ -235,29 +235,32 @@ export const findRelatedUsersToCurrentUserEvents = async (user_id) => {
       ) e;
     `, [user_id]);
 
+
     const allExpertiseResult = await client.query('SELECT user_id, specialty FROM expertise');
     const allExpertise = allExpertiseResult.rows;
 
-    const allUsersResult = await client.query('SELECT name,id, address, phone FROM users');
+
+    const allUsersResult = await client.query('SELECT id, address, phone FROM users');
     const allUsers = allUsersResult.rows;
+    const addedUsers = new Set();
 
     const matchedEvents = [];
-    for (const { id: id, name: name,  } of currentUserEvents.rows) {
+    for (const { id: event_id, name: event_name, type: event_type } of currentUserEvents.rows) {
       for (const { user_id: current_user_id, specialty } of allExpertise) {
-       
-        const similarity = calculateSimilarity(specialty, name);
-        if (similarity > 0.2 && current_user_id !== user_id) {
+        const similarity = calculateSimilarity(specialty, event_name);
+        if (similarity > 0.2 && current_user_id !== user_id && !addedUsers.has(current_user_id)) {
           const user = allUsers.find(u => u.id === current_user_id);
           if (user) {
             matchedEvents.push({
-              //id,
-              //name,
-              user_name: user.name,
-              //user_id: current_user_id,
+              //event_id,
+              //event_name,
+             // event_type,
+              user_id: current_user_id,
               specialty,
               user_address: user.address,
               user_phone: user.phone
             });
+            addedUsers.add(current_user_id);
           }
         }
       }
