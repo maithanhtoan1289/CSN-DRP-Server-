@@ -90,3 +90,12 @@ export const getRelatedIncidents = async (req, res) => {
       res.status(500).json({ error: 'Internal server error' });
     }
 };
+export const getRelatedUsersToCurrentUserEvents = async (req, res) => {
+    try {
+        const user_id  = req.userId;
+      const relatedUsers = await expertiseService.findRelatedUsersToCurrentUserEvents(user_id);
+      res.json({ success: true, relatedUsers });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
