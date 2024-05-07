@@ -219,3 +219,52 @@ export const findMatches = async (user_id) => {
     client.release();
   }
 };
+export const findRelatedUsersToCurrentUserEvents = async (user_id) => {
+  const client = await pool.connect();
+
+  try {
+
+    const currentUserEvents = await client.query(`
+      SELECT e.id, e.name, e.type 
+      FROM ( 
+        SELECT id, name, type FROM problems WHERE user_id = $1 
+        UNION 
+        SELECT id, name, type FROM natural_disasters WHERE user_id = $1 
+        UNION 
+        SELECT id, name, type FROM incidents WHERE user_id = $1
+      ) e;
+    `, [user_id]);
+
+    const allExpertiseResult = await client.query('SELECT user_id, specialty FROM expertise');
+    const allExpertise = allExpertiseResult.rows;
+
+    const allUsersResult = await client.query('SELECT name,id, address, phone FROM users');
+    const allUsers = allUsersResult.rows;
+
+    const matchedEvents = [];
+    for (const { id: id, name: name,  } of currentUserEvents.rows) {
+      for (const { user_id: current_user_id, specialty } of allExpertise) {
+       
+        const similarity = calculateSimilarity(specialty, name);
+        if (similarity > 0.2 && current_user_id !== user_id) {
+          const user = allUsers.find(u => u.id === current_user_id);
+          if (user) {
+            matchedEvents.push({
+              //id,
+              //name,
+              user_name: user.name,
+              //user_id: current_user_id,
+              specialty,
+              user_address: user.address,
+              user_phone: user.phone
+            });
+          }
+        }
+      }
+    }
+
+    return matchedEvents;
+  } finally {
+    client.release();
+  }
+};

@@ -4,7 +4,8 @@ import {
     updateExpertiseController,
     deleteExpertiseController,
     getExpertiseByUserIdController,
-    getRelatedIncidents
+    getRelatedIncidents,
+    getRelatedUsersToCurrentUserEvents
 } from "../controllers/expertise.controllers.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import ROLES from "../enums/roles.js";
@@ -19,6 +20,7 @@ router.delete("/deleteExpertise/:id", authMiddleware([ROLES.USER,ROLES.RESCUER])
 
 router.get("/getExpertise", authMiddleware([ROLES.USER,ROLES.RESCUER]), getExpertiseByUserIdController);
 router.get("/related", authMiddleware([ROLES.USER,ROLES.RESCUER]), getRelatedIncidents);
+router.get("/userRproblem", authMiddleware([ROLES.USER,ROLES.RESCUER]), getRelatedUsersToCurrentUserEvents);
 
 
 export default router;
