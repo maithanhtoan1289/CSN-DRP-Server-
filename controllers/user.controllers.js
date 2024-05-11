@@ -64,6 +64,25 @@ export const getAllRescueNeeded = async (req, res) => {
   }
 };
 
+// New
+export const getAllRescueSeeker = async (req, res) => {
+  try {
+    const users = await userService.getAllRescueSeeker();
+
+    res.status(200).json({
+      status: 200,
+      message: "Successfully retrieved all rescue seeker",
+      data: users,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: 500,
+      message: "Internal server error" + error.message,
+    });
+  }
+};
+
 export const getAllRescueHistory = async (req, res) => {
   try {
     const token = req.headers.authorization;
@@ -92,24 +111,6 @@ export const getAllRescueHistory = async (req, res) => {
     res.status(500).json({
       status: 500,
       message: "Internal server error" + error.message,
-    });
-  }
-};
-export const getUserProfileController = async (req, res) => {
-  const userId = req.userId;
-
-  try {
-    const userProfile = await userService.getUserProfile(userId);
-    res.status(200).json({
-      status: 200,
-      message: "Successfully retrieved user profile",
-      data: userProfile,
-    });
-  } catch (error) {
-    console.error("Error in getUserProfileController:", error);
-    res.status(500).json({
-      status: 500,
-      message: "Internal server error: " + error.message,
     });
   }
 };

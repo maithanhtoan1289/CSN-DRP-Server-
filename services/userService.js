@@ -243,6 +243,31 @@ const userService = {
     }
   },
 
+  // New
+  async getAllRescueSeeker() {
+    const query = {
+      text: `SELECT users.id, users.name, users.email, users.address, users.phone, users.coordinates, users.avatar, roles.name AS role
+      FROM users
+      INNER JOIN user_role ON users.id = user_role.user_id
+      INNER JOIN roles ON user_role.role_id = roles.id
+      WHERE roles.name = $1
+      ORDER BY users.updated_at DESC
+      `,
+      values: ["ROLE_RESCUER"],
+    };
+
+    try {
+      const result = await Promise.all([pool.query(query)]);
+
+      const rows = result[0].rows;
+
+      return { rows };
+    } catch (error) {
+      console.error("Error when fetching users", error.stack);
+      throw error;
+    }
+  },
+
   async getAllRescueHistory(rescueId) {
     try {
       // Truy vấn id từ history_natural_disasters và history_problems
@@ -322,22 +347,6 @@ const userService = {
       throw error;
     }
   },
-
-  async getUserProfile(userId) {
-    try {
-      const query = {
-        text: "SELECT name, phone, address, email FROM users WHERE id = $1",
-        values: [userId],
-      };
-  
-      const { rows } = await pool.query(query);
-      return rows[0];
-    } catch (error) {
-      console.error("Error when getting user profile:", error.stack);
-      throw error;
-    }
-  },
 };
-
 
 export default userService;
