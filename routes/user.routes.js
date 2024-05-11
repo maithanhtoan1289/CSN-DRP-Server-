@@ -4,7 +4,7 @@ import {
   getAllUsersByPageAndLimit,
   getAllRescueNeeded,
   getAllRescueHistory,
-  getUserProfileController
+  getAllRescueSeeker,
 } from "../controllers/user.controllers.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import ROLES from "../enums/roles.js";
@@ -19,16 +19,14 @@ router.post(
   addCoordinates
 );
 
-router.get(
-  "/rescue-needed",
-  authMiddleware([ROLES.RESCUER]),
-  getAllRescueNeeded
-);
+// New
+router.get("/rescue-needed", getAllRescueNeeded);
+router.get("/rescue-seeker", getAllRescueSeeker);
 
 router.get(
   "/rescue-history",
   authMiddleware([ROLES.RESCUER]),
   getAllRescueHistory
 );
-router.get("/profile", authMiddleware([ROLES.USER,ROLES.RESCUER]), getUserProfileController);
+
 export default router;
