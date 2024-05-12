@@ -162,11 +162,11 @@ export const findMatches = async (user_id) => {
 
   try {
     // Lấy thông tin địa chỉ và số điện thoại của người dùng từ bảng users
-    const userResult = await client.query('SELECT address, phone FROM users WHERE id = $1', [user_id]);
+    const userResult = await client.query('SELECT name,address, phone FROM users WHERE id = $1', [user_id]);
     if (userResult.rows.length === 0) {
       throw new Error('User not found');
     }
-    const { address, phone } = userResult.rows[0];
+    const { name,address, phone } = userResult.rows[0];
 
     // Lấy tất cả các sở trường của người dùng từ bảng expertise
     const expertiseResult = await client.query('SELECT specialty FROM expertise WHERE user_id = $1', [user_id]);
@@ -192,7 +192,7 @@ export const findMatches = async (user_id) => {
       const problemResult = await client.query('SELECT id, name FROM problems');
       for (const problem of problemResult.rows) {
         if (!addedEvents.has(problem.id)) {
-          matches.problems.push({ ...problem, user_address: address, user_phone: phone });
+          matches.problems.push({ ...problem,user_name: name, user_address: address, user_phone: phone });
           addedEvents.add(problem.id);
         }
       }
@@ -200,7 +200,7 @@ export const findMatches = async (user_id) => {
       const disasterResult = await client.query('SELECT id, name FROM natural_disasters');
       for (const disaster of disasterResult.rows) {
         if (!addedEvents.has(disaster.id)) {
-          matches.natural_disasters.push({ ...disaster, user_address: address, user_phone: phone });
+          matches.natural_disasters.push({ ...disaster,user_name: name, user_address: address, user_phone: phone });
           addedEvents.add(disaster.id);
         }
       }
@@ -208,7 +208,7 @@ export const findMatches = async (user_id) => {
       const incidentResult = await client.query('SELECT id, name FROM incidents');
       for (const incident of incidentResult.rows) {
         if (!addedEvents.has(incident.id)) {
-          matches.incidents.push({ ...incident, user_address: address, user_phone: phone });
+          matches.incidents.push({ ...incident, user_name: name,user_address: address, user_phone: phone });
           addedEvents.add(incident.id);
         }
       }
@@ -240,7 +240,7 @@ export const findRelatedUsersToCurrentUserEvents = async (user_id) => {
     const allExpertise = allExpertiseResult.rows;
 
 
-    const allUsersResult = await client.query('SELECT id, address, phone FROM users');
+    const allUsersResult = await client.query('SELECT id,name, address, phone FROM users');
     const allUsers = allUsersResult.rows;
     const addedUsers = new Set();
 
@@ -255,6 +255,7 @@ export const findRelatedUsersToCurrentUserEvents = async (user_id) => {
               //event_id,
               //event_name,
              // event_type,
+             user_name:user.name,
               user_id: current_user_id,
               specialty,
               user_address: user.address,
