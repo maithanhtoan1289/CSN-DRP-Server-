@@ -5,6 +5,8 @@ import {
   getAllRescueNeeded,
   getAllRescueHistory,
   getAllRescueSeeker,
+  getUserProfileController,
+  updateUserProfile
 } from "../controllers/user.controllers.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import ROLES from "../enums/roles.js";
@@ -28,5 +30,6 @@ router.get(
   authMiddleware([ROLES.RESCUER]),
   getAllRescueHistory
 );
-
+router.get("/profile",authMiddleware([ROLES.ADMIN, ROLES.RESCUER, ROLES.EMPLOYEE, ROLES.USER]), getUserProfileController);
+router.put('/updateprofile',authMiddleware([ROLES.ADMIN, ROLES.RESCUER, ROLES.EMPLOYEE, ROLES.USER]), updateUserProfile);
 export default router;

@@ -347,6 +347,41 @@ const userService = {
       throw error;
     }
   },
+  async getUserProfile(userId) {
+    try {
+      const query = {
+        text: "SELECT name, phone, address, email FROM users WHERE id = $1",
+        values: [userId],
+      };
+
+      const { rows } = await pool.query(query);
+      return rows[0];
+    } catch (error) {
+      console.error("Error when getting user profile:", error.stack);
+      throw error;
+    }
+  },
+  
+  async updateUserProfile(userId, newData) {
+    try {
+      const { name, phone, address, email } = newData;
+      const query = {
+        text: `
+          UPDATE users
+          SET name = $1, phone = $2, address = $3, email = $4
+          WHERE id = $5
+          RETURNING *
+        `,
+        values: [name, phone, address, email, userId],
+      };
+      const { rows } = await pool.query(query);
+      return rows[0];
+    } catch (error) {
+      console.error("Error when updating user profile:", error.stack);
+      throw error;
+    }
+  },
+  
 };
 
 export default userService;

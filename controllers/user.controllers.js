@@ -114,3 +114,40 @@ export const getAllRescueHistory = async (req, res) => {
     });
   }
 };
+export const getUserProfileController = async (req, res) => {
+  const userId = req.userId;
+
+  try {
+    const userProfile = await userService.getUserProfile(userId);
+    res.status(200).json({
+      status: 200,
+      message: "Successfully retrieved user profile",
+      data: userProfile,
+    });
+  } catch (error) {
+    console.error("Error in getUserProfileController:", error);
+    res.status(500).json({
+      status: 500,
+      message: "Internal server error: " + error.message,
+    });
+  }
+};
+
+export const updateUserProfile = async (req, res) => {
+  const userId = req.userId; // Lấy userId từ middleware
+  const newData = req.body; // Dữ liệu mới từ yêu cầu
+  try {
+    const updatedProfile = await userService.updateUserProfile(userId, newData);
+    res.status(200).json({
+      status: 200,
+      message: "User profile updated successfully",
+      data: updatedProfile,
+    });
+  } catch (error) {
+    console.error("Error in updateUserProfile controller:", error);
+    res.status(500).json({
+      status: 500,
+      message: "Internal server error: " + error.message,
+    });
+  }
+}
