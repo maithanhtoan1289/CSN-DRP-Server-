@@ -124,68 +124,70 @@ async getAllIncidents() {
   }
 ,  
 //tim kiem bang hashtag
-  async findHashtagIncidents(startLocation, endLocation) {
-    try {
-      // Tìm các nhãn gần đúng cho startLocation và endLocation
-      const queryStart = {
-          text: `
-          SELECT DISTINCT unnest(hashtags) AS hashtag 
-          FROM incidents 
-          WHERE location ILIKE $1
-          `,
-          values: [`%${startLocation}%`],
-      };
+async findHashtagIncidents(startLocation, endLocation) {
+  try {
+    // Tìm các nhãn gần đúng cho startLocation và endLocation
+    const queryStart = {
+      text: `
+        SELECT DISTINCT unnest(hashtags) AS hashtag 
+        FROM incidents 
+        WHERE location ILIKE $1
+      `,
+      values: [`%${startLocation}%`],
+    };
 
-      const queryEnd = {
-          text: `
-          SELECT DISTINCT unnest(hashtags) AS hashtag 
-          FROM incidents 
-          WHERE location ILIKE $1
-          `,
-          values: [`%${endLocation}%`],
-      };
+    const queryEnd = {
+      text: `
+        SELECT DISTINCT unnest(hashtags) AS hashtag 
+        FROM incidents 
+        WHERE location ILIKE $1
+      `,
+      values: [`%${endLocation}%`],
+    };
 
-      const { rows: startHashtags } = await pool.query(queryStart);
-      const { rows: endHashtags } = await pool.query(queryEnd);
+    const { rows: startHashtags } = await pool.query(queryStart);
+    const { rows: endHashtags } = await pool.query(queryEnd);
 
-      // Lấy ra danh sách nhãn từ kết quả truy vấn
-      const startTags = startHashtags.map(row => row.hashtag);
-      const endTags = endHashtags.map(row => row.hashtag);
+    // Lấy ra danh sách nhãn từ kết quả truy vấn
+    const startTags = startHashtags.map(row => row.hashtag);
+    const endTags = endHashtags.map(row => row.hashtag);
 
-      const query = {
-          text: `
-          SELECT * 
-          FROM incidents 
-          WHERE 
+    const query = {
+      text: `
+        SELECT incidents.*, users.name AS user_name
+        FROM incidents
+        INNER JOIN users ON incidents.user_id = users.id
+        WHERE 
           (
-              (location ILIKE $1 AND $3 && hashtags)
-              OR
-              (location ILIKE $2 AND $4 && hashtags)
+            (location ILIKE $1 AND $3 && hashtags)
+            OR
+            (location ILIKE $2 AND $4 && hashtags)
           )
           OR
           (
-              $5 = ANY(hashtags)
-              OR
-              $6 = ANY(hashtags)
+            $5 = ANY(hashtags)
+            OR
+            $6 = ANY(hashtags)
           )
-          `,
-          values: [
-              `%${startLocation}%`,
-              `%${endLocation}%`,
-              startTags,
-              endTags,
-              startLocation,
-              endLocation
-          ],
-      };
+      `,
+      values: [
+        `%${startLocation}%`,
+        `%${endLocation}%`,
+        startTags,
+        endTags,
+        startLocation,
+        endLocation
+      ],
+    };
 
-      const { rows } = await pool.query(query);
-      return rows;
+    const { rows } = await pool.query(query);
+    return rows;
   } catch (error) {
-      console.error("Error in findIncidents service:", error.stack);
-      throw error;
+    console.error("Error in findIncidents service:", error.stack);
+    throw error;
   }
 },
+
 
 
 async deleteIncidentById(incidentId){
