@@ -29,22 +29,24 @@ const incidentService = {
       throw error;
     }
   },
+async getAllIncidents() {
+  const query = {
+    text: `SELECT incidents.id, incidents.name, incidents.type, incidents.description, 
+                  incidents.location, incidents.status, incidents.hashtags, 
+                  incidents.created_at, incidents.updated_at, users.name AS user_name
+           FROM incidents
+           INNER JOIN users ON incidents.user_id = users.id
+           ORDER BY incidents.created_at DESC`,
+  };
+  try {
+    const result = await pool.query(query);
+    return result.rows;
+  } catch (error) {
+    console.error("Error when fetching all incidents", error);
+    throw error;
+  }
+},
 
-  async getAllIncidents() {
-    const query = {
-      text: `SELECT id, name, type, description, location, status,hashtags, created_at, updated_at
-      FROM incidents
-      ORDER BY created_at DESC`,
-    };
-
-    try {
-      const result = await pool.query(query);
-      return result.rows;
-    } catch (error) {
-      console.error("Error when fetching all incidents", error);
-      throw error;
-    }
-  },
   async updateIncident(incidentId, newData) {
     const { name, type, description, location, status } = newData;
   
