@@ -38,6 +38,8 @@ export const addNaturalDisasterVersion1 = async (req, res) => {
     role,
     password,
     urlImage,
+    priority,
+
   } = req.body;
 
   try {
@@ -70,7 +72,9 @@ export const addNaturalDisasterVersion1 = async (req, res) => {
         end_date,
         effected_area,
         status,
-        urlImage
+        urlImage,
+        priority,
+
       );
 
     res.status(200).json({
@@ -166,6 +170,33 @@ export const addNaturalDisasterStatus = async (req, res) => {
     res.status(200).json({
       status: 200,
       message: "Successfully add natural disaster status",
+      data: {
+        naturalDisasterUpdated,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: 500,
+      message: "Internal server error: " + error.message,
+    });
+  }
+};
+
+// Task 1
+export const editNaturalDisasterPriority = async (req, res) => {
+  const { naturalDisasterId, priority } = req.body;
+
+  try {
+    const naturalDisasterUpdated =
+      await naturalDisasterService.editNaturalDisasterPriority(
+        naturalDisasterId,
+        priority
+      );
+
+    res.status(200).json({
+      status: 200,
+      message: "Successfully edit natural disaster priority",
       data: {
         naturalDisasterUpdated,
       },

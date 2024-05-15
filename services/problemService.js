@@ -44,12 +44,14 @@ const problemService = {
     end_date,
     address,
     status,
-    urlImage
+    urlImage,
+    priority,
+
   ) {
     const query = {
-      text: `INSERT INTO problems (user_id, name, type, start_date, end_date, address, status, url_image)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING id, name, type, start_date, end_date, address, status, url_image`,
+      text: `INSERT INTO problems (user_id, name, type, start_date, end_date, address, status, url_image,     priority        )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING id, name, type, start_date, end_date, address, status, url_image,     priority      `,
       values: [
         userId,
         incidentName,
@@ -59,6 +61,8 @@ const problemService = {
         address,
         status,
         urlImage,
+        priority,
+
       ],
     };
 
@@ -73,6 +77,8 @@ const problemService = {
         address,
         status,
         url_image,
+        priority,
+
       } = result.rows[0];
 
       return {
@@ -84,6 +90,8 @@ const problemService = {
         address,
         status,
         url_image,
+        priority,
+
       };
     } catch (error) {
       console.error("Error when adding problem", error.stack);

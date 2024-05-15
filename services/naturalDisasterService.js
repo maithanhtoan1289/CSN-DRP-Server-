@@ -44,12 +44,14 @@ const naturalDisasterService = {
     end_date,
     effected_area,
     status,
-    urlImage
+    urlImage,
+    priority,
+
   ) {
     const query = {
-      text: `INSERT INTO natural_disasters (user_id, name, type, start_date, end_date, effected_area, address, status, url_image)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-      RETURNING id, name, type, start_date, end_date, effected_area, address, status, url_image`,
+      text: `INSERT INTO natural_disasters (user_id, name, type, start_date, end_date, effected_area, address, status, url_image,     priority)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      RETURNING id, name, type, start_date, end_date, effected_area, address, status, url_image,     priority      `,
       values: [
         userId,
         naturalDisasterName,
@@ -60,6 +62,8 @@ const naturalDisasterService = {
         effected_area,
         status,
         urlImage,
+        priority,
+
       ],
     };
 
@@ -75,6 +79,8 @@ const naturalDisasterService = {
         address,
         status,
         url_image,
+        priority,
+
       } = result.rows[0];
 
       return {
@@ -87,6 +93,8 @@ const naturalDisasterService = {
         address,
         status,
         url_image,
+        priority,
+
       };
     } catch (error) {
       console.error("Error when adding natural disaster", error.stack);
@@ -154,6 +162,42 @@ const naturalDisasterService = {
     } catch (error) {
       console.error("Error when adding natural disaster status", error.stack);
       throw error;
+    }
+  },
+
+  // Task 1
+  async editNaturalDisasterPriority(naturalDisasterId, priority) {
+    try {
+      // Check if the natural disaster exists
+      const checkQuery = {
+        text: "SELECT * FROM natural_disasters WHERE id = $1",
+        values: [naturalDisasterId],
+      };
+
+      const checkResult = await pool.query(checkQuery);
+
+      if (checkResult.rowCount === 0) {
+        // Use rowCount for existence check
+        throw new Error("Natural disaster with the provided id does not exist");
+      }
+
+      // Update the priority
+      const updateQuery = {
+        text: "UPDATE natural_disasters SET priority = $1 WHERE id = $2",
+        values: [priority, naturalDisasterId],
+      };
+
+      const result = await pool.query(updateQuery);
+
+      if (result.rowCount === 0) {
+        // Use rowCount for update check
+        throw new Error("Failed to update natural disaster priority");
+      }
+
+      return { id: naturalDisasterId, priority }; // Simplify return object
+    } catch (error) {
+      console.error("Error editing natural disaster priority:", error.stack);
+      throw error; // Re-throw for further handling
     }
   },
 };
