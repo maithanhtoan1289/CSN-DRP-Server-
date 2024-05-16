@@ -156,60 +156,63 @@ function calculateSimilarity(str1, str2) {
   const similarity = intersection.size / Math.min(set1.size, set2.size);
   return similarity;
 }
-
 export const findMatches = async (user_id) => {
   const client = await pool.connect();
 
   try {
-    // Lấy thông tin địa chỉ và số điện thoại của người dùng từ bảng users
-    const userResult = await client.query('SELECT name,address, phone FROM users WHERE id = $1', [user_id]);
+    const userResult = await client.query('SELECT name, address, phone FROM users WHERE id = $1', [user_id]);
     if (userResult.rows.length === 0) {
       throw new Error('User not found');
     }
-    const { name,address, phone } = userResult.rows[0];
+    const { name, address, phone } = userResult.rows[0];
 
-    // Lấy tất cả các sở trường của người dùng từ bảng expertise
     const expertiseResult = await client.query('SELECT specialty FROM expertise WHERE user_id = $1', [user_id]);
     if (expertiseResult.rows.length === 0) {
       throw new Error('User expertise not found');
     }
 
-    // Khởi tạo một Set để lưu trữ id của các sự kiện đã thêm vào kết quả
+
     const addedEvents = new Set();
 
-    // Khởi tạo đối tượng matches
+
     const matches = {
       problems: [],
       natural_disasters: [],
       incidents: []
     };
 
-    // Duyệt qua từng sở trường của người dùng
-    for (let i = 0; i < expertiseResult.rows.length; i++) {
-      const expertise = expertiseResult.rows[i].specialty;
+    const eventTypes = ['problems', 'natural_disasters', 'incidents'];
+    for (const eventType of eventTypes) {
+      const eventResult = await client.query(`SELECT id, name, user_id FROM ${eventType}`);
 
-      // Tìm các sự kiện tương tự trong mỗi bảng và thêm vào matches nếu chưa được thêm trước đó
-      const problemResult = await client.query('SELECT id, name FROM problems');
-      for (const problem of problemResult.rows) {
-        if (!addedEvents.has(problem.id)) {
-          matches.problems.push({ ...problem,user_name: name, user_address: address, user_phone: phone });
-          addedEvents.add(problem.id);
-        }
-      }
+      for (const event of eventResult.rows) {
+        const { id: eventId, name: eventName, user_id: eventUserId } = event;
 
-      const disasterResult = await client.query('SELECT id, name FROM natural_disasters');
-      for (const disaster of disasterResult.rows) {
-        if (!addedEvents.has(disaster.id)) {
-          matches.natural_disasters.push({ ...disaster,user_name: name, user_address: address, user_phone: phone });
-          addedEvents.add(disaster.id);
-        }
-      }
+        if (!addedEvents.has(eventId)) {
+          const eventUserResult = await client.query('SELECT name, address, phone FROM users WHERE id = $1', [eventUserId]);
+          if (eventUserResult.rows.length === 0) {
+            throw new Error('User not found');
+          }
+          const { name: eventUserName, address: eventUserAddress, phone: eventUserPhone } = eventUserResult.rows[0];
 
-      const incidentResult = await client.query('SELECT id, name FROM incidents');
-      for (const incident of incidentResult.rows) {
-        if (!addedEvents.has(incident.id)) {
-          matches.incidents.push({ ...incident, user_name: name,user_address: address, user_phone: phone });
-          addedEvents.add(incident.id);
+          for (const expertiseRow of expertiseResult.rows) {
+            const specialty = expertiseRow.specialty;
+            const similarity = calculateSimilarity(specialty, eventName);
+
+
+            if (similarity > 0.2) {
+              matches[eventType].push({
+                id: eventId,
+                name: eventName,
+                user_name: eventUserName,
+                user_address: eventUserAddress,
+                user_phone: eventUserPhone,
+                similarity
+              });
+              addedEvents.add(eventId);
+              break; 
+            }
+          }
         }
       }
     }
@@ -219,6 +222,7 @@ export const findMatches = async (user_id) => {
     client.release();
   }
 };
+
 export const findRelatedUsersToCurrentUserEvents = async (user_id) => {
   const client = await pool.connect();
 
@@ -248,7 +252,7 @@ export const findRelatedUsersToCurrentUserEvents = async (user_id) => {
     for (const { id: event_id, name: event_name, type: event_type } of currentUserEvents.rows) {
       for (const { user_id: current_user_id, specialty } of allExpertise) {
         const similarity = calculateSimilarity(specialty, event_name);
-        if (similarity > 0.2 && current_user_id !== user_id && !addedUsers.has(current_user_id)) {
+        if (similarity > 0.1 && current_user_id !== user_id && !addedUsers.has(current_user_id)) {
           const user = allUsers.find(u => u.id === current_user_id);
           if (user) {
             matchedEvents.push({
