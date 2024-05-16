@@ -59,6 +59,36 @@ const userService = {
     }
   },
 
+  // Task 5
+  async createNewRoleForRescuer(userId, roleName) {
+    try {
+      // Check for existing role and get ID (combined logic)
+      const { rows: [role] = [] } = await pool.query({
+        text: "SELECT id FROM roles WHERE name = $1",
+        values: [roleName],
+      });
+
+      const roleId = role?.id;
+
+      // Assign role if found, otherwise log error
+      if (roleId) {
+        await pool.query({
+          text: "INSERT INTO user_role (user_id, role_id) VALUES ($1, $2)",
+          values: [userId, roleId],
+        });
+        console.log("Role assigned to user successfully!");
+      } else {
+        console.error(`Role '${roleName}' not found!`);
+      }
+    } catch (error) {
+      console.error(
+        "Error when creating role or assigning role to user",
+        error.stack
+      );
+      throw error;
+    }
+  },
+
   async createUser(
     name,
     username,

@@ -104,6 +104,8 @@ export const addProblemVersion2 = async (req, res) => {
     phone,
     id,
     urlImage,
+    // Task bổ sung
+    priority,
   } = req.body;
 
   try {
@@ -124,7 +126,64 @@ export const addProblemVersion2 = async (req, res) => {
       end_date,
       address,
       status,
-      urlImage
+      urlImage,
+      // Task bổ sung
+    priority,
+    );
+
+    res.status(200).json({
+      status: 200,
+      message: "Successfully add problem",
+      data: {
+        id: userId,
+        name,
+        problemsQuery,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: 500,
+      message: "Internal server error: " + error.message,
+    });
+  }
+};
+
+// Task 5
+export const addProblemVersion3 = async (req, res) => {
+  const {
+    effected_area,
+    coordinates,
+    name,
+    incidentName,
+    incidentType,
+    phone,
+    userId,
+    urlImage,
+    priority,
+    roleName,
+  } = req.body;
+
+  try {
+    const start_date = new Date();
+    const end_date = null;
+    const status = "chưa kết thúc";
+    const address = effected_area;
+
+    await userService.createNewRoleForRescuer(userId, roleName);
+
+    await userService.addCoordinates(userId, address, coordinates, phone);
+
+    const problemsQuery = await problemService.addProblem(
+      userId,
+      incidentName,
+      incidentType,
+      start_date,
+      end_date,
+      address,
+      status,
+      urlImage,
+      priority
     );
 
     res.status(200).json({
