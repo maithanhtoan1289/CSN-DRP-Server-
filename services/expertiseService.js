@@ -59,99 +59,15 @@ export const deleteExpertise = async (expertiseId) => {
         console.error("Error when deleting expertise:", error);
         throw error;
     }
-};
-// function levenshteinDistance(str1, str2) {
-//   const len1 = str1.length;
-//   const len2 = str2.length;
-//   const matrix = [];
-//   for (let i = 0; i <= len1; i++) {
-//     matrix[i] = [i];
-//   }
-//   for (let j = 0; j <= len2; j++) {
-//     matrix[0][j] = j;
-//   }
-//   for (let i = 1; i <= len1; i++) {
-//     for (let j = 1; j <= len2; j++) {
-//       const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
-//       matrix[i][j] = Math.min(
-//         matrix[i - 1][j] + 1,
-//         matrix[i][j - 1] + 1,
-//         matrix[i - 1][j - 1] + cost
-//       );
-//     }
-//   }
+};function removeAccents(str) {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
 
-//   return matrix[len1][len2];
-// }
-
-
-// function findSimilarityScore(str1, str2) {
-//   const maxLength = Math.max(str1.length, str2.length);
-//   const distance = levenshteinDistance(str1, str2);
-//   return 1 - distance / maxLength;
-// }
-
-// export const findMatches = async (user_id) => {
-//   const client = await pool.connect();
-// try {
-//   // Lấy thông tin địa chỉ và số điện thoại của người dùng từ bảng users
-//   const userResult = await client.query('SELECT address, phone FROM users WHERE id = $1', [user_id]);
-//   if (userResult.rows.length === 0) {
-//     throw new Error('User not found');
-//   }
-//   const { address, phone } = userResult.rows[0];
-
-//   // Lấy tất cả các sở trường của người dùng từ bảng expertise
-//   const expertiseResult = await client.query('SELECT specialty FROM expertise WHERE user_id = $1', [user_id]);
-//   if (expertiseResult.rows.length === 0) {
-//     throw new Error('User expertise not found');
-//   }
-
-//   // Khởi tạo đối tượng matches
-//   const matches = {
-//     problems: [],
-//     natural_disasters: [],
-//     incidents: []
-//   };
-
-//   // Duyệt qua từng sở trường của người dùng
-//   for (let i = 0; i < expertiseResult.rows.length; i++) {
-//     const expertise = expertiseResult.rows[i].specialty;
-
-//     // Tìm các sự kiện tương tự trong mỗi bảng và thêm vào matches
-//     const problemResult = await client.query('SELECT p.id AS problem_id, p.name AS problem_name, p.type AS problem_type, u.name AS user_name, u.address AS user_address, u.phone AS user_phone FROM problems p JOIN users u ON p.user_id = u.id');
-//     for (const problem of problemResult.rows) {
-//       const similarity = calculateSimilarity(problem.problem_name, expertise);
-//       if (similarity > 0.5) {
-//         matches.problems.push({ ...problem, similarity, user_address: address, user_phone: phone });
-//       }
-//     }
-
-//     const disasterResult = await client.query('SELECT d.id AS disaster_id, d.name AS disaster_name, d.type AS disaster_type, u.name AS user_name, u.address AS user_address, u.phone AS user_phone FROM natural_disasters d JOIN users u ON d.user_id = u.id');
-//     for (const disaster of disasterResult.rows) {
-//       const similarity = calculateSimilarity(disaster.disaster_name, expertise);
-//       if (similarity > 0.5) {
-//         matches.natural_disasters.push({ ...disaster, similarity, user_address: address, user_phone: phone });
-//       }
-//     }
-
-//     const incidentResult = await client.query('SELECT i.id AS incident_id, i.name AS incident_name, i.type AS incident_type, u.name AS user_name, u.address AS user_address, u.phone AS user_phone FROM incidents i JOIN users u ON i.user_id = u.id');
-//     for (const incident of incidentResult.rows) {
-//       const similarity = calculateSimilarity(incident.incident_name, expertise);
-//       if (similarity > 0.5) {
-//         matches.incidents.push({ ...incident, similarity, user_address: address, user_phone: phone });
-//       }
-//     }
-//   }
-
-//   return matches;
-//   } finally {
-//     client.release();
-//   }
-// };
 function calculateSimilarity(str1, str2) {
-  const set1 = new Set(str1.toLowerCase().split(' '));
-  const set2 = new Set(str2.toLowerCase().split(' '));
+  const normalizedStr1 = removeAccents(str1.toLowerCase());
+  const normalizedStr2 = removeAccents(str2.toLowerCase());
+  const set1 = new Set(normalizedStr1.split(' '));
+  const set2 = new Set(normalizedStr2.split(' '));
   const intersection = new Set([...set1].filter(x => set2.has(x)));
   const similarity = intersection.size / Math.min(set1.size, set2.size);
   return similarity;
@@ -207,7 +123,6 @@ export const findMatches = async (user_id) => {
                 user_name: eventUserName,
                 user_address: eventUserAddress,
                 user_phone: eventUserPhone,
-                similarity
               });
               addedEvents.add(eventId);
               break; 
@@ -227,39 +142,34 @@ export const findRelatedUsersToCurrentUserEvents = async (user_id) => {
   const client = await pool.connect();
 
   try {
-
     const currentUserEvents = await client.query(`
       SELECT e.id, e.name, e.type 
       FROM ( 
-        SELECT id, name, type FROM problems WHERE user_id = $1 
+        SELECT id, name, 'problem' as type FROM problems WHERE user_id = $1 
         UNION 
-        SELECT id, name, type FROM natural_disasters WHERE user_id = $1 
+        SELECT id, name, 'natural_disaster' as type FROM natural_disasters WHERE user_id = $1 
         UNION 
-        SELECT id, name, type FROM incidents WHERE user_id = $1
+        SELECT id, name, 'incident' as type FROM incidents WHERE user_id = $1
       ) e;
     `, [user_id]);
-
 
     const allExpertiseResult = await client.query('SELECT user_id, specialty FROM expertise');
     const allExpertise = allExpertiseResult.rows;
 
-
-    const allUsersResult = await client.query('SELECT id,name, address, phone FROM users');
+    const allUsersResult = await client.query('SELECT id, name, address, phone FROM users');
     const allUsers = allUsersResult.rows;
-    const addedUsers = new Set();
 
+    const addedUsers = new Set();
     const matchedEvents = [];
     for (const { id: event_id, name: event_name, type: event_type } of currentUserEvents.rows) {
       for (const { user_id: current_user_id, specialty } of allExpertise) {
         const similarity = calculateSimilarity(specialty, event_name);
-        if (similarity > 0.1 && current_user_id !== user_id && !addedUsers.has(current_user_id)) {
+        if (similarity > 0.1 && current_user_id !== user_id) {
           const user = allUsers.find(u => u.id === current_user_id);
-          if (user) {
+          if (user && !addedUsers.has(current_user_id)) {
             matchedEvents.push({
-              //event_id,
-              //event_name,
-             // event_type,
-             user_name:user.name,
+              
+              user_name: user.name,
               user_id: current_user_id,
               specialty,
               user_address: user.address,
