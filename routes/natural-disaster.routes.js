@@ -4,6 +4,7 @@ import {
   addNaturalDisasterVersion1,
   addNaturalDisasterVersion2,
   addNaturalDisasterStatus,
+  editNaturalDisasterPriority
 } from "../controllers/natural-disaster.controllers.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import ROLES from "../enums/roles.js";
@@ -19,5 +20,8 @@ router.get(
 router.post("/v1/add", addNaturalDisasterVersion1);
 router.post("/v2/add", addNaturalDisasterVersion2);
 router.put("/add-status", addNaturalDisasterStatus);
+
+// Task 1
+router.put("/edit-priority", editNaturalDisasterPriority);
 
 export default router;

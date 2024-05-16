@@ -212,11 +212,12 @@ const userService = {
     }
   },
 
+  // Task 1
   async getAllRescueNeeded() {
     const query = {
       text: `SELECT users.id, users.name, users.email, users.address, users.phone, users.coordinates, users.avatar, roles.name AS role, 
-      natural_disasters.id AS disaster_id ,natural_disasters.name AS disaster_name, natural_disasters.status AS disaster_status, natural_disasters.url_image AS disaster_url_image,
-      problems.id AS problem_id, problems.name AS problem_name, problems.status AS problem_status, problems.url_image AS problem_url_image
+      natural_disasters.id AS disaster_id ,natural_disasters.name AS disaster_name, natural_disasters.type AS disaster_type, natural_disasters.status AS disaster_status, natural_disasters.url_image AS disaster_url_image, natural_disasters.priority AS disaster_priority,
+      problems.id AS problem_id, problems.name AS problem_name, problems.type AS problem_type, problems.status AS problem_status, problems.url_image AS problem_url_image, problems.priority AS problem_priority
               FROM users
               INNER JOIN user_role ON users.id = user_role.user_id
               INNER JOIN roles ON user_role.role_id = roles.id

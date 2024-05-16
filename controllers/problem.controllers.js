@@ -37,6 +37,8 @@ export const addProblemVersion1 = async (req, res) => {
     role,
     password,
     urlImage,
+    priority,
+
   } = req.body;
 
   try {
@@ -66,7 +68,9 @@ export const addProblemVersion1 = async (req, res) => {
       end_date,
       address,
       status,
-      urlImage
+      urlImage,
+      priority,
+
     );
 
     res.status(200).json({
@@ -160,6 +164,32 @@ export const addProblemStatus = async (req, res) => {
     res.status(200).json({
       status: 200,
       message: "Successfully add problem status",
+      data: {
+        problemUpdated,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: 500,
+      message: "Internal server error: " + error.message,
+    });
+  }
+};
+
+  // Task 1
+export const editProblemPriority = async (req, res) => {
+  const { problemId, priority } = req.body;
+
+  try {
+    const problemUpdated = await problemService.editProblemPriority(
+      problemId,
+      priority
+    );
+
+    res.status(200).json({
+      status: 200,
+      message: "Successfully edit problem priority",
       data: {
         problemUpdated,
       },
