@@ -58,20 +58,53 @@ export const deleteExpertise = async (expertiseId) => {
     } catch (error) {
         console.error("Error when deleting expertise:", error);
         throw error;
-    }
-};function removeAccents(str) {
+    } };
+//function removeAccents(str) {
+//   return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+// }
+
+// function calculateSimilarity(str1, str2) {
+//   const normalizedStr1 = removeAccents(str1.toLowerCase());
+//   const normalizedStr2 = removeAccents(str2.toLowerCase());
+//   const set1 = new Set(normalizedStr1.split(' '));
+//   const set2 = new Set(normalizedStr2.split(' '));
+//   const intersection = new Set([...set1].filter(x => set2.has(x)));
+//   const similarity = intersection.size / Math.min(set1.size, set2.size);
+//   return similarity;
+// }
+function removeAccents(str) {
   return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-function calculateSimilarity(str1, str2) {
-  const normalizedStr1 = removeAccents(str1.toLowerCase());
-  const normalizedStr2 = removeAccents(str2.toLowerCase());
-  const set1 = new Set(normalizedStr1.split(' '));
-  const set2 = new Set(normalizedStr2.split(' '));
+function normalizeString(str) {
+  return removeAccents(str)
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function getNGrams(str, n) {
+  const tokens = str.split(' ');
+  const ngrams = new Set();
+  for (let i = 0; i <= tokens.length - n; i++) {
+    ngrams.add(tokens.slice(i, i + n).join(' '));
+  }
+  return ngrams;
+}
+
+function calculateSimilarity(str1, str2, n = 1, threshold = 0.1) {
+  const normalizedStr1 = normalizeString(str1);
+  const normalizedStr2 = normalizeString(str2);
+
+  const set1 = getNGrams(normalizedStr1, n);
+  const set2 = getNGrams(normalizedStr2, n);
+
   const intersection = new Set([...set1].filter(x => set2.has(x)));
   const similarity = intersection.size / Math.min(set1.size, set2.size);
-  return similarity;
+
+  return similarity >= threshold ? similarity : 0;
 }
+
 export const findMatches = async (user_id) => {
   const client = await pool.connect();
 
