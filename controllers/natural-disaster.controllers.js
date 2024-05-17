@@ -109,6 +109,8 @@ export const addNaturalDisasterVersion2 = async (req, res) => {
     phone,
     id,
     urlImage,
+    // Task bổ sung
+    priority,
   } = req.body;
 
   try {
@@ -129,7 +131,64 @@ export const addNaturalDisasterVersion2 = async (req, res) => {
       end_date,
       effected_area,
       status,
-      urlImage
+      urlImage,
+      // Task bổ sung
+      priority,
+    );
+
+    res.status(200).json({
+      status: 200,
+      message: "Successfully add natural disaster",
+      data: {
+        id: userId,
+        name,
+        naturalDisaster,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: 500,
+      message: "Internal server error: " + error.message,
+    });
+  }
+};
+
+// Task 5
+export const addNaturalDisasterVersion3 = async (req, res) => {
+  const {
+    effected_area,
+    coordinates,
+    name,
+    naturalDisasterName,
+    naturalDisasterType,
+    phone,
+    userId,
+    urlImage,
+    priority,
+    roleName,
+  } = req.body;
+
+  try {
+    const start_date = new Date();
+    const end_date = null;
+    const address = effected_area;
+    const status = "chưa kết thúc";
+
+    await userService.createNewRoleForRescuer(userId, roleName);
+
+    await userService.addCoordinates(userId, address, coordinates, phone);
+
+    const naturalDisaster = await naturalDisasterService.addNaturalDisaster(
+      userId,
+      naturalDisasterName,
+      naturalDisasterType,
+      start_date,
+      end_date,
+      effected_area,
+      status,
+      urlImage,
+      priority
     );
 
     res.status(200).json({
