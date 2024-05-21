@@ -23,17 +23,17 @@ router.get(
 );
 router.get(
   "/incidents",
-  authMiddleware([ROLES.ADMIN,ROLES.USER]),
+  authMiddleware([ROLES.ADMIN,ROLES.USER,ROLES.RESCUER]),
   getIncidentsByUserId
 );
 router.get(
   "/histories_incidents",
-  authMiddleware([ROLES.ADMIN,ROLES.USER]),
+  authMiddleware([ROLES.ADMIN,ROLES.USER,ROLES.RESCUER]),
   getHistoryIncidentsByUserId
 );
 router.get(
   "/all_histories_incidents",
-  authMiddleware([ROLES.ADMIN,ROLES.USER]),
+  authMiddleware([ROLES.ADMIN,ROLES.USER,ROLES.RESCUER]),
   getAllIncidentsByUserIdController
 );
 export default router;
