@@ -124,69 +124,55 @@ async getAllIncidents() {
   }
 ,  
 //tim kiem bang hashtag
-async findHashtagIncidents(startLocation, endLocation) {
-  try {
-    // Tìm các nhãn gần đúng cho startLocation và endLocation
-    const queryStart = {
-      text: `
-        SELECT DISTINCT unnest(hashtags) AS hashtag 
-        FROM incidents 
-        WHERE location ILIKE $1
-      `,
-      values: [`%${startLocation}%`],
-    };
 
-    const queryEnd = {
-      text: `
-        SELECT DISTINCT unnest(hashtags) AS hashtag 
-        FROM incidents 
-        WHERE location ILIKE $1
-      `,
-      values: [`%${endLocation}%`],
-    };
+async  findHashtagIncidents(startLocation, endLocation) {
+  const client = await pool.connect();
+   try {
 
-    const { rows: startHashtags } = await pool.query(queryStart);
-    const { rows: endHashtags } = await pool.query(queryEnd);
+    const allHashtagsResult = await client.query('SELECT DISTINCT unnest(hashtags) AS hashtag FROM incidents');
+    const allHashtags = allHashtagsResult.rows.map(row => row.hashtag);
 
-    // Lấy ra danh sách nhãn từ kết quả truy vấn
-    const startTags = startHashtags.map(row => row.hashtag);
-    const endTags = endHashtags.map(row => row.hashtag);
+    const addedEvents = new Set();
+    const matchedEvents = [];
 
-    const query = {
-      text: `
-        SELECT incidents.*, users.name AS user_name
-        FROM incidents
-        INNER JOIN users ON incidents.user_id = users.id
-        WHERE 
-          (
-            (location ILIKE $1 AND $3 && hashtags)
-            OR
-            (location ILIKE $2 AND $4 && hashtags)
-          )
-          OR
-          (
-            $5 = ANY(hashtags)
-            OR
-            $6 = ANY(hashtags)
-          )
-      `,
-      values: [
-        `%${startLocation}%`,
-        `%${endLocation}%`,
-        startTags,
-        endTags,
-        startLocation,
-        endLocation
-      ],
-    };
+    // Duyệt qua từng hashtag
+    for (const hashtag of allHashtags) {
+      // Tìm tất cả các sự kiện liên quan đến hashtag
+      const hashtagEventsResult = await client.query(`
+      SELECT id, name, description, location 
+      FROM incidents 
+      WHERE $1 = ANY(hashtags)
+      `, [hashtag]);
+      const hashtagEvents = hashtagEventsResult.rows;
 
-    const { rows } = await pool.query(query);
-    return rows;
-  } catch (error) {
-    console.error("Error in findIncidents service:", error.stack);
-    throw error;
+      // Kiểm tra xem sự kiện đã được thêm vào kết quả chưa
+      for (const event of hashtagEvents) {
+        if (!addedEvents.has(event.id)) {
+          // So sánh location với startLocation và endLocation
+          const similarityStart = calculateSimilarity(event.location, startLocation);
+          const similarityEnd = calculateSimilarity(event.location, endLocation);
+
+          // Nếu độ tương đồng lớn hơn ngưỡng và sự kiện chưa được thêm vào kết quả
+          if (similarityStart >= 0.2 || similarityEnd >= 0.2) {
+            // Thêm sự kiện vào mảng kết quả
+            matchedEvents.push({
+              id: event.id,
+              name: event.name,
+              description: event.description,
+              location: event.location
+            });
+            addedEvents.add(event.id);
+          }
+        }
+      }
+    }
+
+    return matchedEvents;
+  } finally {
+    client.release();
   }
-},
+}
+,
 
 
 
@@ -218,4 +204,37 @@ async deleteHistoryIncidentById(historyIncidentId)  {
   },
   
 };
+
+function removeAccents(str) {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function normalizeString(str) {
+  return removeAccents(str)
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function getNGrams(str, n) {
+  const tokens = str.split(' ');
+  const ngrams = new Set();
+  for (let i = 0; i <= tokens.length - n; i++) {
+    ngrams.add(tokens.slice(i, i + n).join(' '));
+  }
+  return ngrams;
+}
+
+function calculateSimilarity(str1, str2, n = 1, threshold = 0.1) {
+  const normalizedStr1 = normalizeString(str1);
+  const normalizedStr2 = normalizeString(str2);
+
+  const set1 = getNGrams(normalizedStr1, n);
+  const set2 = getNGrams(normalizedStr2, n);
+
+  const intersection = new Set([...set1].filter(x => set2.has(x)));
+  const similarity = intersection.size / Math.min(set1.size, set2.size);
+
+  return similarity >= threshold ? similarity : 0;
+}
 export default incidentService;
