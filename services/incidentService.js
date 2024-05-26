@@ -139,7 +139,7 @@ async  findHashtagIncidents(startLocation, endLocation) {
     for (const hashtag of allHashtags) {
       // Tìm tất cả các sự kiện liên quan đến hashtag
       const hashtagEventsResult = await client.query(`
-      SELECT id, name, description, location 
+      SELECT id, name, description, location, created_at
       FROM incidents 
       WHERE $1 = ANY(hashtags)
       `, [hashtag]);
@@ -159,7 +159,8 @@ async  findHashtagIncidents(startLocation, endLocation) {
               id: event.id,
               name: event.name,
               description: event.description,
-              location: event.location
+              location: event.location,
+              time:event.created_at
             });
             addedEvents.add(event.id);
           }
