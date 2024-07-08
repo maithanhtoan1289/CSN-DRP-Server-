@@ -1,7 +1,7 @@
 import * as expertiseService from "../services/expertiseService.js";
 export const getExpertiseByUserIdController = async (req, res) => {
     const userId = req.userId;
-    console.log(userId)
+   // console.log(userId)
 
     try {
         const expertiseList = await expertiseService.getExpertiseByUserId(userId);
@@ -20,7 +20,7 @@ export const getExpertiseByUserIdController = async (req, res) => {
 };
 export const addExpertiseController = async (req, res) => {
     const userId = req.userId;
-    console.log(userId)
+   // console.log(userId)
     const { specialty, description } = req.body;
 
     try {
